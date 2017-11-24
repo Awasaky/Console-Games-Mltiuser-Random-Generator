@@ -6,8 +6,11 @@ local scene = composer.newScene();
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-local gotoMenu = function()
-	composer.gotoScene( "scene.menu" );
+local fontCommon = "Arial Black";
+
+local function gotoMenu()
+	composer.gotoScene( "scene.menu", { effect = "fade", time = 800 } );
+	print("scene.menu");
 end
 
 -- -----------------------------------------------------------------------------------
@@ -19,9 +22,23 @@ function scene:create( event )
 
 	local sceneGroup = self.view
 	-- Code here runs when the scene is first created but has not yet appeared on screen
-	gotoMenu();
+	local background = display.newImageRect( sceneGroup, "scene/menu/smb3.png", 1280, 720 );
+  background.x = display.contentCenterX;
+  background.y = display.contentCenterY;
 
-end
+	local buttonMenuText = display.newText( sceneGroup, "to Menu", 1150, 395, fontCommon, 26 );	
+	buttonMenu = display.newRoundedRect( sceneGroup, 1150, 395, buttonMenuText.width + 40, 40, 5 );
+	buttonMenu.strokeWidth = 3;
+	buttonMenu:setFillColor( 0.0, 0.01 );
+	buttonMenu:addEventListener( "tap", gotoMenu );
+
+
+  local overlay = display.newImageRect( sceneGroup, "scene/menu/mask.png", 1280, 720 );
+  overlay.x = display.contentCenterX;
+  overlay.y = display.contentCenterY;
+  overlay.blendMode = "multiply";
+
+end;
 
 
 -- show()
@@ -51,7 +68,7 @@ function scene:hide( event )
 
 	elseif ( phase == "did" ) then
 		-- Code here runs immediately after the scene goes entirely off screen
-
+		composer.removeScene( "scene.generator" );
 	end
 end
 

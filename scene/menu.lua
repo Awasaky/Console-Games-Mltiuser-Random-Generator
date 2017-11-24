@@ -10,22 +10,24 @@ local json = require( "json" )
 
 local fontCommon = "Arial Black";
 
-local gamesButtons, gamesTable, playersTable = {}, {}, {};
-local platformChoice;
+local gamesButtons, gamesTable = {}, {};
+local playersTable, playersTeam, playersLeft = {}, {}, {};
+local platformChoice = 1;
 local buttonAddPlayer, buttonRemovePlayer;
 
-local gotoGenerator = function()
-	composer.gotoScene( "scene.generator" );
+local function gotoGenerator()
+	composer.setVariable( "gamesTable", gamesTable );
+	composer.setVariable( "platformChoice", platformChoice );
+	composer.gotoScene( "scene.generator", { effect = "fade", time = 800 } );
+	print("scene.generator");
 end;
 
-local addPlayer = function()
+local function addPlayer()
   print("addPlayer");
 end;
 
-local removePlayer = function()
+local function removePlayer()
 	print("removePlayer");
-	composer.removeScene( "scene.menu" );
-	composer.gotoScene( "scene.menu" );
 end;
 
 -- -----------------------------------------------------------------------------------
@@ -38,14 +40,14 @@ function scene:create( event )
 	local sceneGroup = self.view;
 	-- Code here runs when the scene is first created but has not yet appeared on screen
 
-  local background = display.newImageRect( sceneGroup, "scene/menu/background.png", 1280, 720 );
+  local background = display.newImageRect( sceneGroup, "scene/menu/smb3.png", 1280, 720 );
   background.x = display.contentCenterX;
   background.y = display.contentCenterY;
---[[
+
   local horizontalLine = display.newLine( sceneGroup, 0, 360, 1280, 360 );
   horizontalLine:setStrokeColor( 1, 1, 1, 1 );
   horizontalLine.strokeWidth = 3;
---]]
+
   local verticalLine = display.newLine( sceneGroup, 640, 0, 640, 720 );
   verticalLine:setStrokeColor( 1, 1, 1, 1 );
   verticalLine.strokeWidth = 3;
@@ -58,8 +60,8 @@ function scene:create( event )
 
   local textPlayers = makeText( "Players", 5, 0 );
   local textSystems = makeText( "Systems", 645, 0 );
-  --local textTeam = makeText( "Team", 5, 360 );
-  --local textPlanLeft = makeText( "Plan Left", 645, 360 );
+  local textTeam = makeText( "Team", 5, 360 );
+  local textPlanLeft = makeText( "Plan Left", 645, 360 );
 
   local loadBase = function( basePath )
 		local baseTable = {};
@@ -79,22 +81,13 @@ function scene:create( event )
 
 	--Platform Keys
 		local platformSelect = function( platformNumber )
-			
-			local buttonStartX, buttonStartY = 350, 75;
-
 			return function()
-			  platformChoice = gamesTable[1][platformNumber];
+			  platformChoice = platformNumber;
 			  for i = 1, #gamesButtons do
 					gamesButtons[i].strokeWidth = 3;
 				end;
 				gamesButtons[platformNumber].strokeWidth = 7;
-
-				randomGame = math.random( #gamesTable[platformNumber+1] );
-				local newButtonText = display.newText( sceneGroup, gamesTable[platformNumber+1][randomGame], buttonStartX - 300, buttonStartY, fontCommon, 26 );	  
-		  	newButtonText.anchorX = 0.0
-		  	buttonStartY = buttonStartY + 40 ;
 		  end;
-
 		end;
 
 		local buttonStartX, buttonStartY = 800, 75;
@@ -113,17 +106,30 @@ function scene:create( event )
 	  end;
 
   --Player add and remove keys
-	  local buttonAddPlayerX, buttonAddPlayery = 580, 20;
-	  local buttonAddPlayerText = display.newText( sceneGroup, "+", buttonAddPlayerX+2, buttonAddPlayery, fontCommon, 26 );	
-		local buttonRemovePlayerText = display.newText( sceneGroup, "-", buttonAddPlayerX+37, buttonAddPlayery, fontCommon, 26 );	
-	  buttonAddPlayer = display.newRoundedRect( sceneGroup, buttonAddPlayerX, buttonAddPlayery, 30, 30, 5 );
+	  local buttonAddPlayerX, buttonAddPlayerY = 560, 30;
+
+	  local buttonAddPlayerText = display.newText( sceneGroup, "+", buttonAddPlayerX+2, buttonAddPlayerY, fontCommon, 26 );	
+	  buttonAddPlayer = display.newRoundedRect( sceneGroup, buttonAddPlayerX, buttonAddPlayerY, 40, 40, 5 );
 		buttonAddPlayer.strokeWidth = 3;
 		buttonAddPlayer:setFillColor( 0.0, 0.01 );
 		buttonAddPlayer:addEventListener( "tap", addPlayer );
-	  buttonRemovePlayer = display.newRoundedRect( sceneGroup, buttonAddPlayerX+35, buttonAddPlayery, 30, 30, 5 );
+
+		local buttonRemovePlayerText = display.newText( sceneGroup, "-", buttonAddPlayerX+47, buttonAddPlayerY, fontCommon, 26 );	
+	  buttonRemovePlayer = display.newRoundedRect( sceneGroup, buttonAddPlayerX+45, buttonAddPlayerY, 40, 40, 5 );
 		buttonRemovePlayer.strokeWidth = 3;
 		buttonRemovePlayer:setFillColor( 0.0, 0.01 );
 		buttonRemovePlayer:addEventListener( "tap", removePlayer );
+
+	local buttonGeneratorText = display.newText( sceneGroup, "to Generator", 1150, 395, fontCommon, 26 );	
+	buttonGenerator = display.newRoundedRect( sceneGroup, 1150, 395, buttonGeneratorText.width + 40, 40, 5 );
+	buttonGenerator.strokeWidth = 3;
+	buttonGenerator:setFillColor( 0.0, 0.01 );
+	buttonGenerator:addEventListener( "tap", gotoGenerator );
+
+	local overlay = display.newImageRect( sceneGroup, "scene/menu/mask.png", 1280, 720 );
+  overlay.x = display.contentCenterX;
+  overlay.y = display.contentCenterY;
+  overlay.blendMode = "multiply";
 
 end;
 
@@ -156,7 +162,7 @@ function scene:hide( event )
 
 	elseif ( phase == "did" ) then
 		-- Code here runs immediately after the scene goes entirely off screen
-		composer.removeScene( "menu" );
+		composer.removeScene( "scene.menu" );
 	end
 end
 
