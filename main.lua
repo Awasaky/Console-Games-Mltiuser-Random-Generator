@@ -6,4 +6,4 @@ display.setStatusBar( display.HiddenStatusBar )
 -- Seed the random number generator
 math.randomseed( os.time() )
 
-composer.gotoScene( "scene.menu" );
+composer.gotoScene( "scene.menu", { effect = "fade", time = 800 } );
