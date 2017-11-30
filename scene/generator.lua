@@ -20,7 +20,7 @@ local buttonNextText;
 local function genTableClear( retValue )
 	for i = #genTable, 1, -1 do
 		genTable[i]:removeSelf();
-		genTable[i] = nil;
+		table.remove( genTable );
 	end;
 	return retValue;
 end;
@@ -31,7 +31,6 @@ local function generateGame( scrGroup )
 		  buttonNextY = genTableClear( buttonStartY );
 		end;
 		local randomGame = gamesTable[players.platformChoice + 1][ math.random( #gamesTable[players.platformChoice + 1] ) ];
-		print(#randomGame);
 		randomGame = #randomGame < 65 and randomGame or string.sub( randomGame, 1, 65 ) .. "...";
 		local newButtonText = display.newText( scrGroup, randomGame, buttonNextX, buttonNextY, fontCommon, 26 );
 		newButtonText.anchorX = 0.0;
@@ -119,14 +118,12 @@ function scene:hide( event )
 		
 		buttonMenu:removeEventListener( "tap", gotoMenu );
 		buttonMenu:removeSelf();
-		buttonMenu = nil;
 		
 		buttonNext:removeEventListener( "tap", generateGame );
 		buttonNext:removeSelf();
-		buttonNext = nil;
 
 		buttonNextText:removeSelf();
-		buttonNextText = nil;
+
 	end;
 end;
 

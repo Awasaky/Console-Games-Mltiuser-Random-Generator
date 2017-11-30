@@ -8,28 +8,16 @@ local json = require( "json" )
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
+-- Common Code
+
 local fontCommon = "Arial Black";
 local mainLayer, overlayLayer;
 
 local gamesTable = {};
-local textGames;
 local players = {
 	ptable = {}, team = {}, left = {},
 	games = {}, played = {},
 	platformChoice = 1 };
-local buttonsGamesMenu = {};
-local buttonAddPlayer, buttonRemovePlayer;
-
-local platformSelect = function( platformNumber )
-	return function()
-		players.platformChoice = platformNumber;
-		for i = 1, #buttonsGamesMenu do
-			buttonsGamesMenu[i].strokeWidth = 3;
-		end;
-		textGames.text = "Games: " .. #gamesTable[players.platformChoice+1];
-		buttonsGamesMenu[platformNumber].strokeWidth = 7;
-	end;
-end;
 
 local function gotoGenerator()
 	composer.setVariable( "gamesTable", gamesTable );
@@ -37,19 +25,59 @@ local function gotoGenerator()
 	composer.gotoScene( "scene.generator", { effect = "fade", time = 800 } );
 end;
 
-local function playersInitplayer( pt, playerName )
-	local pos = #pt.ptable + 1;
-	table.insert( pt.ptable, playerName );
-	table.insert( pt.games, {} );
-	table.insert( pt.played, {} );
-	for i = 1, #gamesTable-1 do -- create in player personal table games table = #platforms
-		table.insert( pt.games[pos], {} );
-		table.insert( pt.played[pos], {} );
-		for k = 1, #gamesTable[i+1] do --create zero filled table to every game in games table
-			table.insert( pt.games[pos][i], 0 );
-			table.insert( pt.played[pos][i], 0 );
+-- Common Code
+
+local textGames;
+local buttonsGamesMenu = {};
+local buttonAddPlayer, buttonRemovePlayer;
+
+local function platformSelect( platformNumber )
+	return function()
+		players.platformChoice = platformNumber;
+		for i = 1, #gamesTable[1] do
+			buttonsGamesMenu[1][i].strokeWidth = 3;
 		end;
+		textGames.text = "Games: " .. #gamesTable[players.platformChoice+1];
+		buttonsGamesMenu[1][platformNumber].strokeWidth = 7;
 	end;
+end;
+
+local function addKeysFromList( buttonStartX, buttonStartY, listOfKeys, callback )
+	local keysList = {{},{}};
+	local buttonStartX = buttonStartX or 800;
+	local buttonStartY = buttonStartY or 100;
+	local buttonNowY = buttonStartY;
+  for i = 1, #listOfKeys do --gamesTable[1]
+		local newButton = display.newRoundedRect( mainLayer, buttonStartX, buttonNowY, 280, 40, 5 );
+		newButton.strokeWidth = 3;
+		newButton:setFillColor( 0.0, 0.01 );
+		local newButtonText = display.newText( mainLayer, listOfKeys[i], buttonStartX, buttonNowY, fontCommon, 26 );	  
+	  buttonNowY = buttonNowY + 55 ;
+	  if buttonNowY > buttonStartY + 225 then
+	  	buttonStartX = buttonStartX + 300;
+	  	buttonNowY = buttonStartY;
+	  end;
+	  newButton:addEventListener( "tap", callback( i ) );
+	  table.insert( keysList[1], newButton );
+	  table.insert( keysList[2], newButtonText );
+  end;
+  return keysList;
+ end;
+
+local function removeKeysFromList( listOfKeys, callback )
+	for i = #listOfKeys[1], 1, -1 do
+		listOfKeys[1][i]:removeEventListener( "tap", callback(i) );
+		listOfKeys[1][i]:removeSelf();
+		listOfKeys[2][i]:removeSelf();
+		table.remove( listOfKeys[1] );
+		table.remove( listOfKeys[2] );
+	end;
+end;
+
+local function rebuildPlayersList()
+	print("rebuildPlayersList");
+	--remove all 3 players buttons lists
+	--build all 3 players button lists
 end;
 
 local function addPlayer( scrGroup )
@@ -62,13 +90,26 @@ local function addPlayer( scrGroup )
 		local nameField;
 		local function nameListener( event )
 			if ( event.phase == "ended" or event.phase == "submitted" ) then
-				if playersInitplayer ~= "" then
-					playersInitplayer( players, event.target.text );
+				if event.target.text ~= "" then
+					local pos = #players.ptable + 1; --players - Initplayer
+					local playerName = event.target.text;
+					table.insert( players.ptable, playerName );
+					table.insert( players.games, {} );
+					table.insert( players.played, {} );
+					for i = 1, #gamesTable-1 do -- create in player personal table games table = #platforms
+						table.insert( players.games[pos], {} );
+						table.insert( players.played[pos], {} );
+						for k = 1, #gamesTable[i+1] do --create zero filled table to every game in games table
+							table.insert( players.games[pos][i], 0 );
+							table.insert( players.played[pos][i], 0 );
+						end;
+					end;
 				end;
 		  	nameField:removeEventListener( "userInput", nameListener );
 		  	nameField:removeSelf();
 		  	enterNameButton:removeSelf();
 		  	enterNameText:removeSelf();
+		  	rebuildPlayersList();
 		  end;
 		end;
 		nameField = native.newTextField( display.contentCenterX, display.contentCenterY + 20, 960, 60 );
@@ -138,7 +179,6 @@ function scene:create( event )
   overlay.x = display.contentCenterX;
   overlay.y = display.contentCenterY;
   overlay.blendMode = "multiply";
-
 end;
 
 -- show()
@@ -150,22 +190,9 @@ function scene:show( event )
 	if ( phase == "will" ) then
 		-- Code here runs when the scene is still off screen (but is about to come on screen)
 		--Platform Keys
-			local buttonStartX, buttonStartY = 800, 100;
-		  for i = 1, #gamesTable[1] do
-				local newButton = display.newRoundedRect( mainLayer, buttonStartX, buttonStartY, 280, 40, 5 );
-				newButton.strokeWidth = 3;
-				newButton:setFillColor( 0.0, 0.01 );
-				local newButtonText = display.newText( mainLayer, gamesTable[1][i], buttonStartX, buttonStartY, fontCommon, 26 );	  
-			  buttonStartY = buttonStartY + 55 ;
-			  if buttonStartY > 325 then
-			  	buttonStartX = 1100;
-			  	buttonStartY = 100;
-			  end;
-			  newButton:addEventListener( "tap", platformSelect(i) );
-			  table.insert( buttonsGamesMenu, newButton );
-		  end;
-
-		platformSelect(players.platformChoice)();
+		buttonsGamesMenu = addKeysFromList( 800, 100, gamesTable[1], platformSelect );
+		platformSelect( players.platformChoice )();
+		print( players.platformChoice );
 
   --Player add and remove keys
 	 	local buttonAddPlayerX, buttonAddPlayerY = 550, 30;
@@ -191,7 +218,6 @@ function scene:show( event )
 	elseif ( phase == "did" ) then
 		-- Code here runs when the scene is entirely on screen
 		-- add scene update here
-
 	end;
 end;
 
@@ -206,22 +232,16 @@ function scene:hide( event )
 
 	elseif ( phase == "did" ) then
 		-- Code here runs immediately after the scene goes entirely off screen
-		for i = #buttonsGamesMenu, 1, -1 do
-			buttonsGamesMenu[i]:removeEventListener( "tap", platformSelect(i) );
-			buttonsGamesMenu[i]:removeSelf();
-			buttonsGamesMenu[i] = nil;
-		end;
+		removeKeysFromList( buttonsGamesMenu, platformSelect );
+
 		buttonAddPlayer:removeEventListener( "tap", addPlayer(mainLayer) );
 		buttonAddPlayer:removeSelf();
-		buttonAddPlayer = nil;
 
 		buttonRemovePlayer:removeEventListener( "tap", removePlayer );
 		buttonRemovePlayer:removeSelf();
-		buttonRemovePlayer = nil;
 
 		buttonGenerator:removeEventListener( "tap", gotoGenerator );
 		buttonGenerator:removeSelf();
-		buttonGenerator = nil;
 
 	end;
 end;
